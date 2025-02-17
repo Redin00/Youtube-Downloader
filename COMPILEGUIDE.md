@@ -1,4 +1,4 @@
-###### GUIDE of HOW TO COMPILE the script into a single .exe file #####
+## GUIDE of HOW TO COMPILE the script into a single .exe file #####
 <br>
 <br>
 To compile the script into a single file, you need to use the <a href="https://pypi.org/project/pyinstaller">Pyinstaller Library</a>.<br>
