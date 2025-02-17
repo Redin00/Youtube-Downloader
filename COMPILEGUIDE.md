@@ -3,6 +3,7 @@
 <br>
 To compile the script into a single file, you need to use the <a href="https://pypi.org/project/pyinstaller">Pyinstaller Library</a>.<br>
 Then, execute the following command from CMD: <i></i><br>
+
 ```
 pyinstaller YT-Downloader.py --onefile --noconsole --add-data="AppImage.png;." --add-data="icon.ico;." --add-binary="ffmpeg.exe;." --icon=icon.ico</i><br>
 ```
