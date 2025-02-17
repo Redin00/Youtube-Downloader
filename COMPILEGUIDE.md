@@ -5,7 +5,7 @@ To compile the script into a single file, you need to use the <a href="https://p
 Then, execute the following command from CMD: <i></i><br>
 
 ```
-pyinstaller YT-Downloader.py --onefile --noconsole --add-data="AppImage.png;." --add-data="icon.ico;." --add-binary="ffmpeg.exe;." --icon=icon.ico</i><br>
+pyinstaller YT-Downloader.py --onefile --noconsole --add-data="AppImage.png;." --add-data="icon.ico;." --add-binary="ffmpeg.exe;." --icon=icon.ico
 ```
 Obviously, all the files used to compile the program into a single .exe need to be in the same location of the YT-Downloader script (remember to install ffmpeg.exe from <a href="https://github.com/yt-dlp/FFmpeg-Builds/wiki/Latest">here</a>
 
