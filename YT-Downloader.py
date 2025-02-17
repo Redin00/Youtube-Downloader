@@ -2,77 +2,118 @@ import os
 import yt_dlp
 from tkinter import *
 from tkinter import ttk, filedialog
+from tkinter import messagebox 
 import time
 import threading
+from threading import Event
 import sys
 
-def download_youtube_video(url, outputFormat="mp4"):
+# YT-Downloader script
 
-    global isDownloading
+def YoutubeDownload(url, outputFormat):
 
-    try:
-
-        if(folder_entry.get() == ""):
-            path = os.path.join(os.getcwd(), 'downloads')
-            os.makedirs(path, exist_ok=True)
-        else:
-            path = folder_entry.get() 
+        global isDownloading
         
-        # Options used for the download
-        yt_options = {
-            "progress_hooks": [callable_hook],
-            'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
-            'ffmpeg_location': resource_path("ffmpeg.exe"),
-            'format': 'bestvideo[vcodec^=avc1][height<=1080]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
-            'merge_output_format': 'mp4',
-        }
-    
-        # Changing options if the selected format is mp3
-        if outputFormat == 'mp3':
-            yt_options.update({
-                'format': 'bestaudio/best',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
-                'merge_output_format': 'mp3',
-        }   )
-            
+        try:
 
-        with yt_dlp.YoutubeDL(yt_options) as youtubeDownloader:
-            youtubeDownloader.download(url)
+            if(folder_entry.get() == ""):
+                path = os.path.join(os.getcwd(), 'downloads')
+                os.makedirs(path, exist_ok=True)
+            else:
+                path = folder_entry.get() 
             
-    except Exception as e:
-        downloadingLabel.config(text = "Download failed. Retry with another link or verify that the entered link is correct.")
-        time.sleep(2) 
+            # Options used for the download
+            yt_options = {
+                "progress_hooks": [callable_hook],
+                'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
+                'ffmpeg_location': resource_path("ffmpeg.exe"),
+                'format': 'bestvideo[vcodec^=avc1][height<=1080]+bestaudio[acodec^=mp4a]/best[ext=mp4]',    # Default 1080p for max quality
+                'merge_output_format': 'mp4',
+            }
+        
+            # Controlling for the selected output format
+            if outputFormat == 'mp4 [Best Quality]':
+                yt_options.update({
+                    'format': 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
+                })
+            elif outputFormat == 'mp4 [1080p MAX]':
+                yt_options.update({
+                    'format': 'bestvideo[vcodec^=avc1][height<=1080p]+bestaudio[acodec^=mp4a]/best[ext=mp4]'
+                })
+            elif outputFormat == 'mp4 [720p MAX]': 
+                yt_options.update({
+                    'format': 'bestvideo[vcodec^=avc1][height<=720p]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
+                })
+            elif outputFormat == 'mp3 [BEST]':
+                yt_options.update({
+                    'format': 'bestaudio/best',
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }],
+                    'merge_output_format': 'mp3',
+            }   )
+            elif outputFormat == 'mp3 [WORST]':
+                yt_options.update({
+                    'format': 'worstaudio',
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }],
+                    'merge_output_format': 'mp3',
+            }   )
+                
+
+            with yt_dlp.YoutubeDL(yt_options) as youtubeDownloader:
+                youtubeDownloader.download(url)
+            
+        except Exception as e:
+            isDownloading = False
+            downloadingLabel.config(text = "Download failed. Retry with another link or verify that the entered link is correct.")
+            download_button.config(text="Download video!")
+            time.sleep(2) 
+            downloadingLabel.config(text = "")
+            return
+
         isDownloading = False    
+        downloadingLabel.config(text = "Download completed!")
+        download_button.config(text="Download video!")
+        time.sleep(2) 
         downloadingLabel.config(text = "")
-        return
-
-
-    downloadingLabel.config(text = "Download completed!")
-    time.sleep(2) 
-    isDownloading = False    
-    downloadingLabel.config(text = "")
 
 
 # Hook used to show download percentage in the GUI
 def callable_hook(response):
+
+    global isDownloading
+
+    if(isDownloading == False):
+        sys.exit()
+
     if response["status"] == "downloading":
         downloaded_percent = (float(response["downloaded_bytes"])*100)/float(response["total_bytes"])
         downloadingLabel.config(text=f"Downloading.... ({int(downloaded_percent)}%)")
+
 
 # Function used to start the thread with the function download_youtube_video 
 def startDownloadThread():
     global isDownloading
 
     if(isDownloading == True):
+        
+        if(messagebox.askyesno("Warning", "Do you want to stop the download of the video/playlist?") == True):
+            isDownloading = False
+            downloadingLabel.config(text = "")
+            download_button.config(text="Scarica video!")
+
         return
 
     isDownloading = True
     downloadingLabel.config(text = "Downloading....")
-    t = threading.Thread(target=download_youtube_video, args=(url_entry.get(), comboBox.get())).start()
+    download_button.config(text="Stop Download")
+    t = threading.Thread(target=YoutubeDownload, args=(url_entry.get(), comboBox.get())).start()
 
 
 # Function for selecting folder
@@ -103,12 +144,12 @@ if __name__ == "__main__":
     window.iconbitmap(resource_path("icon.ico"))
     window.grid_columnconfigure(0, weight=1)
     window.resizable(width=False, height=False)
-    window.title("YT Downloader - Public Build")
+    window.title("YT Downloader - Public Build []")
 
     window.configure(background="gray58")
 
     # Title and image section
-    titleLabel = Label(window,text="Welcome! enter the link of the video you want to download:", font=("Comic Sans MS", 15), background="gray58", foreground="black")
+    titleLabel = Label(window,text="Welcome! enter the link of the video or videos you want to download:", font=("Comic Sans MS", 15), background="gray58", foreground="black")
     titleLabel.grid(row="1", column="0")
 
     mainImage = PhotoImage(file=resource_path("AppImage.png"))
@@ -121,9 +162,9 @@ if __name__ == "__main__":
 
 
     # Combo box for choosing output format of the downloaded vid
-    choices = ["mp4", "mp3"]
+    choices = ["mp4 [Best Quality]", "mp4 [1080p MAX]", "mp4 [720p MAX]", "mp3 [BEST]", "mp3 [WORST]"]
     comboBox = ttk.Combobox(window, values = choices, state="readonly")
-    comboBox.set("mp4") # Default value
+    comboBox.set("mp4 [Best Quality]") # Default value
     comboBox.grid(row="3", column="0", sticky=E, padx=20, ipadx=20)
 
     # Select path
