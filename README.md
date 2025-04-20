@@ -1,6 +1,6 @@
 ## Youtube Downloader (Python)
 
-Script in python whose goal is to let you download Youtube videos, with the integration of a simple GUI made with the library TKInter.
+Script in python whose goal is to let you download Youtube videos, with the integration of a simple GUI made with the library TKInter and [ttkbootstrap](https://github.com/israel-dryer/ttkbootstrap/).
 <br>The download of YT videos is made with the external library `"yt-dlp"` available on PyPI: https://pypi.org/project/yt-dlp/
 <br>
 <br>
