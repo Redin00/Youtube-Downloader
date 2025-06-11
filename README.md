@@ -5,5 +5,5 @@ Script in python whose goal is to let you download Youtube videos, with the inte
 <br>
 <br>
 ### IMPORTANT!
-To execute the script manually you need ffmpeg binary in the same file directory. You can download it here: https://github.com/yt-dlp/FFmpeg-Builds/wiki/Latest. When you ffmpeg builds, extract the compressed file and search for the main binary, and finally move it to the script's folder.
+To execute the script manually you need ffmpeg binary in the same file directory. You can download it here: https://github.com/yt-dlp/FFmpeg-Builds/wiki/Latest. When you download the ffmpeg build, extract the compressed file and search for the main binary, and finally move it to the script's folder.
 <br><br>I compiled the script in a single file using Pyinstaller, but if u want to do it yourself for security reasons, the source code is available, and I suggests you to read the [COMPILEGUIDE.md](COMPILEGUIDE.md)
