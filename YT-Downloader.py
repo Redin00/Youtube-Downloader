@@ -1,7 +1,9 @@
 import tkinter as tk
+import platform
 from tkinter import ttk, filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
+from PIL import ImageTk, Image
 
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
@@ -12,6 +14,8 @@ import os
 import yt_dlp
 import threading
 import time
+
+system = platform.system().lower() # Variable for identifying which OS the script is running on
 
 # Disabling to avoid problems when running the code
 import ttkbootstrap.localization
@@ -30,17 +34,29 @@ def YoutubeDownload(url, outputFormat):
             path = folder_entry.get()
 
         # Options used for the download
-        yt_options = {
+        if(system == 'linux'):
+            yt_options = {
             "progress_hooks": [callable_hook],
             'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
-            'ffmpeg_location': resource_path("ffmpeg.exe"),
+            'ffmpeg_location': resource_path("ffmpeg"),
             'format': 'bestvideo[vcodec^=avc1][height<=1080]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
-            # Default 1080p for max quality
             'merge_output_format': 'mp4',
         }
+        elif(system == 'windows'):
 
-        # Changing options if the selected format is mp3
+            yt_options = {
+                "progress_hooks": [callable_hook],
+                'outtmpl': os.path.join(path, '%(title)s.%(ext)s'),
+                'ffmpeg_location': resource_path("ffmpeg.exe"),
+                'format': 'bestvideo[vcodec^=avc1][height<=1080]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
+                'merge_output_format': 'mp4',
+            }
+        else:
+            print("ffmpeg not available for your system. Aborting....")
+
+        # Selecting output format
         if outputFormat == 'mp4 [Best Quality]':
+            print("this")
             yt_options.update({
                 'format': 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
             })
@@ -77,6 +93,7 @@ def YoutubeDownload(url, outputFormat):
             youtubeDownloader.download(url)
 
     except Exception as e:
+        # In case an error occurs ----
         isDownloading = False
         window.focus_force()
         failedNotification.show_toast()
@@ -153,10 +170,8 @@ if __name__ == "__main__":
 
     window = tb.Window(title="Youtube-Downloader [1.1]", themename="darkly", resizable=(False, False))
 
-    window.iconbitmap(resource_path("icon.ico"))
+    window.iconphoto(False, (ImageTk.PhotoImage(Image.open(resource_path("icon.png")))))
     window.geometry("700x400")
-
-    window.iconbitmap(default=resource_path("icon.ico"))
 
     titleLabel = tk.Label(window, text="Welcome! enter the link of the video or videos you want to download:", font=("Comic Sans MS", 15),
                        background="gray58", foreground="black")
@@ -180,10 +195,10 @@ if __name__ == "__main__":
 
     # Select path
     folder_entry = tb.Entry()
-    folder_entry.grid(row="3", column="0", sticky=W, padx=20, ipady=4, ipadx=40)
+    folder_entry.grid(row="3", column="0", sticky=W, padx=10, ipady=4, ipadx=20)
 
-    folder_button = tb.Button(text="Select path", command=selectFolder, style="outline", width=15)
-    folder_button.grid(row="4", column="0", sticky=W, padx=20)
+    folder_button = tb.Button(text="Select path", command=selectFolder, style="outline", width=12)
+    folder_button.grid(row="4", column="0", sticky=W, padx=10)
 
     ToolTip(folder_button, text="Select the output's path.", bootstyle=TOOLBUTTON)
 
