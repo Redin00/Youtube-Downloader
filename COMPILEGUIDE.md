@@ -6,7 +6,12 @@
 To compile the script into a single file, you need to use the <a href="https://pypi.org/project/pyinstaller">Pyinstaller Library</a>.<br>
 Then, execute the following command from terminal: <i></i><br>
 
-### Both Windows & Linux
+### Windows 
+```
+pyinstaller YT-Downloader.py --onefile --noconsole --add-data="AppImage.png":"." --add-data="icon.png":"." --add-binary="ffmpeg.exe":"." --icon=icon.png --hidden-import='PIL._tkinter_finder'
+```
+
+### Linux
 ```
 pyinstaller YT-Downloader.py --onefile --noconsole --add-data="AppImage.png":"." --add-data="icon.png":"." --add-binary="ffmpeg":"." --icon=icon.png --hidden-import='PIL._tkinter_finder'
 ```
