@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     isDownloading = False
 
-    window = tb.Window(title="Youtube-Downloader [1.1]", themename="darkly", resizable=(False, False))
+    window = tb.Window(title="Youtube-Downloader [1.2]", themename="darkly", resizable=(False, False))
 
     window.iconphoto(False, (ImageTk.PhotoImage(Image.open(resource_path("icon.png")))))
     window.geometry("700x400")
