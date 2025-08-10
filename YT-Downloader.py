@@ -15,16 +15,16 @@ import yt_dlp
 import threading
 import time
 
-system = platform.system().lower() # Variable for identifying which OS the script is running on
+system = platform.system().lower() # Variable for the identification of the current OS 
 
-# Disabling to avoid problems when running the code
 import ttkbootstrap.localization
 ttkbootstrap.localization.initialize_localities = bool
 
 
-def YoutubeDownload(url, outputFormat):
+def YoutubeDownload(url, outputFormat, outputQuality):
     global isDownloading
 
+    
     try:
 
         if (folder_entry.get() == ""):
@@ -54,42 +54,50 @@ def YoutubeDownload(url, outputFormat):
         else:
             print("ffmpeg not available for your system. Aborting....")
 
-        # Selecting output format
-        if outputFormat == 'mp4 [Best Quality]':
-            print("this")
+
+        # DEBUG PURPOSES ONLY
+        print(f'OUTPUT FORMAT: {outputFormat}')
+        print(f'OUTPUT QUALITY: {outputQuality}')
+        
+        # Selecting output format and quality
+        if outputFormat in ('mp3', 'm4a', 'ogg', 'aac', 'opus'):
             yt_options.update({
-                'format': 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
-            })
-        elif outputFormat == 'mp4 [1080p MAX]':
-            yt_options.update({
-                'format': 'bestvideo[vcodec^=avc1][height<=1080p]+bestaudio[acodec^=mp4a]/best[ext=mp4]'
-            })
-        elif outputFormat == 'mp4 [720p MAX]':
-            yt_options.update({
-                'format': 'bestvideo[vcodec^=avc1][height<=720p]+bestaudio[acodec^=mp4a]/best[ext=mp4]',
-            })
-        elif outputFormat == 'mp3 [BEST]':
-            yt_options.update({
-                'format': 'bestaudio/best',
+                'format': 'bestaudio',
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
+                    'preferredcodec': f'{outputFormat}',
                     'preferredquality': '192',
                 }],
-                'merge_output_format': 'mp3',
-            })
-        elif outputFormat == 'mp3 [WORST]':
-            yt_options.update({
-                'format': 'worstaudio',
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }],
-                'merge_output_format': 'mp3',
+                'merge_output_format': f'{outputFormat}',
             })
 
+
+            if(outputQuality == 'Worst Quality'):
+                yt_options.update({
+                    'format': 'worstaudio',
+                })
+        else:
+            
+            if outputQuality == 'Best Quality':
+                yt_options.update({'format': 'bestvideo+bestaudio/best',  
+                    'merge_output_format': f'{outputFormat}',          
+                })
+            elif outputQuality == 'Worst Quality':
+                yt_options.update({
+                    'format': 'worstvideo+worstaudio/worst',  
+                    'merge_output_format': f'{outputFormat}',             
+                })
+            else:
+
+                outputQuality = outputQuality[:-1] # Removing the final character 'p' (ex: 1080p becomes only 1080)
+
+                yt_options.update({
+                    'format': f'bestvideo[height<={outputQuality}]+bestaudio/best[height<={outputQuality}]',
+                    'merge_output_format': f'{outputFormat}',                                           
+                })
+
         with yt_dlp.YoutubeDL(yt_options) as youtubeDownloader:
+
             youtubeDownloader.download(url)
 
     except Exception as e:
@@ -101,6 +109,7 @@ def YoutubeDownload(url, outputFormat):
         download_button.config(text="Download video!")
         time.sleep(2)
         downloadingLabel.config(text="")
+        titleLabel.config(text="Enter the link of the videos or playlists you want to download")
         return
 
     isDownloading = False
@@ -110,6 +119,7 @@ def YoutubeDownload(url, outputFormat):
     download_button.config(text="Download video!")
     time.sleep(2)
     downloadingLabel.config(text="")
+    titleLabel.config(text="Enter the link of the videos or playlists you want to download")
 
 
 # Hook used to show download percentage in the GUI
@@ -120,8 +130,14 @@ def callable_hook(response):
         sys.exit()
 
     if response["status"] == "downloading":
+
         downloaded_percent = (float(response["downloaded_bytes"]) * 100) / float(response["total_bytes"])
         downloadProgress.config(value=int(downloaded_percent))
+
+        video_title = response['info_dict'].get('title', None)
+        titleLabel.config(text = f"Video Title: {video_title}")
+
+        
 
 
 # Function used to start the thread with the function download_youtube_video
@@ -141,7 +157,11 @@ def startDownloadThread():
     isDownloading = True
     downloadingLabel.config(text="Downloading....")
     download_button.config(text="Stop Download")
-    t = threading.Thread(target=YoutubeDownload, args=(url_entry.get(), comboBox.get())).start()
+
+    # Changing title label to the title of the video
+
+
+    t = threading.Thread(target=YoutubeDownload, args=(url_entry.get(), comboBoxFormats.get(), comboBoxQuality.get())).start()
 
 
 # Function for selecting folder
@@ -162,18 +182,16 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-
-
 if __name__ == "__main__":
 
     isDownloading = False
 
-    window = tb.Window(title="Youtube-Downloader [1.2]", themename="darkly", resizable=(False, False))
+    window = tb.Window(title="Youtube-Downloader [1.2.5]", themename="darkly", resizable=(False, False))
 
     window.iconphoto(False, (ImageTk.PhotoImage(Image.open(resource_path("icon.png")))))
     window.geometry("700x400")
 
-    titleLabel = tk.Label(window, text="Welcome! enter the link of the video or videos you want to download:", font=("Comic Sans MS", 15),
+    titleLabel = tk.Label(window, text="Enter the link of the videos or playlists you want to download:", font=("Comic Sans MS", 10),
                        background="gray58", foreground="black")
     titleLabel.grid(row="1", column="0")
 
@@ -186,21 +204,36 @@ if __name__ == "__main__":
     url_entry.grid(row="2", column="0", pady=8, padx=8, sticky="WE", ipady=8)
 
     # Combo box for choosing output format of the downloaded vid
-    choices = ["mp4 [Best Quality]", "mp4 [1080p MAX]", "mp4 [720p MAX]", "mp3 [BEST]", "mp3 [WORST]"]
-    comboBox = tb.ttk.Combobox(window, values=choices, state="readonly")
-    comboBox.set("mp4 [Best Quality]")  # Default value
-    comboBox.grid(row="3", column="0", sticky=E, padx=20, ipadx=20)
+    choices = ["mp4", "mp3", "mpeg", "webm", "m4a", "ogg", "aac"]
+    comboBoxFormats = tb.ttk.Combobox(window, values=choices, state="readonly")
+    comboBoxFormats.set("mp4")  # Default value
+    comboBoxFormats.grid(row="3", column="0", sticky=E, padx=20, ipadx=20)
 
-    ToolTip(comboBox, text="Select to change output format", bootstyle=TOOLBUTTON)
+    ToolTip(comboBoxFormats, text="Select to change output format", bootstyle=TOOLBUTTON)
+
+    # Radio buttons for choosing the download quality
+
+    choices = ["Best Quality", "Worst Quality", "1080p", "720p", "480p"]
+    comboBoxQuality = tb.ttk.Combobox(window, values=choices, state="readonly", width=15)
+    comboBoxQuality.grid(row="4", column="0", sticky=E, padx=20, ipadx=20)
+
+    comboBoxQuality.set("Best Quality")
+
+    ToolTip(comboBoxQuality, text="Select to change output quality", bootstyle=TOOLBUTTON)
 
     # Select path
     folder_entry = tb.Entry()
     folder_entry.grid(row="3", column="0", sticky=W, padx=10, ipady=4, ipadx=20)
 
-    folder_button = tb.Button(text="Select path", command=selectFolder, style="outline", width=12)
+    folder_button = tb.Button(text="Select destination", command=selectFolder, style="outline", width=15)
     folder_button.grid(row="4", column="0", sticky=W, padx=10)
 
     ToolTip(folder_button, text="Select the output's path.", bootstyle=TOOLBUTTON)
+
+
+    # Download progress bar
+    downloadProgress = tb.Progressbar(window, bootstyle="success", maximum=100, value=0, length=200)
+    downloadProgress.grid(row=4)
 
     # Downloading label
     downloadingLabel = tk.Label(window, text="", font=("", 12), background="gray58", foreground="black")
@@ -210,10 +243,6 @@ if __name__ == "__main__":
     download_button.grid(row="3", column="0")
 
     ToolTip(download_button, text="Click to start the download", bootstyle=TOOLBUTTON)
-
-    # Download progress bar
-    downloadProgress = tb.Progressbar(window, bootstyle="success", maximum=100, value=0, length=200)
-    downloadProgress.grid(row=4)
 
     # Toast notification download
     failedNotification = ToastNotification(title="YT-Downloader",
